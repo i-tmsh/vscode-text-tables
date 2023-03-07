@@ -1,5 +1,6 @@
 import * as tt from './ttTable';
 import * as vscode from 'vscode';
+import { lenB } from './utils';
 
 const verticalSeparator = '|';
 const horizontalSeparator = '-';
@@ -64,7 +65,7 @@ export class OrgStringifier implements tt.Stringifier {
 
     private dataRowReducer(cols: tt.ColDef[]): StringReducer {
         return (prev, cur, idx) => {
-            const pad = ' '.repeat(cols[idx].width - cur.length + 1);
+            const pad = ' '.repeat(cols[idx].width - lenB(cur) + 1);
             return prev + ' ' + cur + pad + verticalSeparator;
         };
     }

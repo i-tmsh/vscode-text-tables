@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { len, lenB } from './utils';
 
 export enum RowType {
     Unknown,
@@ -47,7 +48,7 @@ export class Table {
             }
         }
 
-        this.cols.forEach((col, i) => col.width = Math.max(col.width, values[i].length));
+        this.cols.forEach((col, i) => col.width = Math.max(col.width, lenB(values[i])));
 
         this.rows.push({ type });
         this.data.push(values);
@@ -154,14 +155,6 @@ export class TableNavigator {
         const result: JumpPosition[] = [];
 
         const cellPadding = 2;
-        let lastAnchor = 0;
-        const anchors = this.table.cols.reduce((accum, col) => {
-            lastAnchor += col.width + cellPadding + 1;
-            accum.push(lastAnchor);
-            return accum;
-        }, [lastAnchor]);
-        // extend last point to "infinity"
-        anchors[anchors.length - 1] = 999;
 
         for (let i = 0; i < this.table.rows.length; ++i) {
             const row = this.table.rows[i];
@@ -177,6 +170,16 @@ export class TableNavigator {
                 const jmpPos = new JumpPosition(start, end, true, prevJmpPos);
                 result.push(jmpPos);
             } else {
+                let lastAnchor = 0;
+                const anchors = this.table.cols.reduce((accum, col, j) => {
+                    const text = this.table.getAt(i, j);
+                    lastAnchor += col.width + len(text) - lenB(text) + cellPadding + 1;
+                    accum.push(lastAnchor);
+                    return accum;
+                }, [lastAnchor]);
+                // extend last point to "infinity"
+                anchors[anchors.length - 1] = 999;
+
                 for (let j = 0; j < anchors.length - 1; ++j) {
                     const prevJmpPos = result[result.length - 1];
                     const start = new vscode.Position(rowLine, anchors[j] + 1);
